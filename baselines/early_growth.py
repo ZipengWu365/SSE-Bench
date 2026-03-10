@@ -6,9 +6,8 @@ from pathlib import Path
 
 import numpy as np
 
+from baselines.common import DEFAULT_INDEX_PATH, load_index
 from evaluation.metrics import calibration_metrics, classification_metrics
-from features.early_observations import build_feature_frame
-from schema.event import load_events_jsonl
 
 
 class EarlyGrowthHeuristic:
@@ -37,18 +36,20 @@ class EarlyGrowthHeuristic:
         return self._score(frame)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the early-growth heuristic baseline.")
-    parser.add_argument(
-        "--events-path",
-        default="data/processed/uci_news_sse/events.jsonl.gz",
-        help="Path to processed Event objects.",
-    )
-    parser.add_argument("--window-minutes", type=int, default=360, help="Observation window in minutes.")
-    args = parser.parse_args()
+def _frame_for_window(index_frame, window_minutes: int):
+    prefix = f"w{window_minutes}_"
+    columns = {
+        f"{prefix}growth_rate": "growth_rate",
+        f"{prefix}max_increment": "max_increment",
+        f"{prefix}burstiness": "burstiness",
+    }
+    frame = index_frame[list(columns) + ["split", "is_sse"]].rename(columns=columns).copy()
+    return frame
 
-    events = load_events_jsonl(Path(args.events_path))
-    frame = build_feature_frame(events, window_minutes=args.window_minutes)
+
+def run_baseline(index_path: str | Path = DEFAULT_INDEX_PATH, window_minutes: int = 360) -> dict[str, object]:
+    index_frame = load_index(index_path)
+    frame = _frame_for_window(index_frame, window_minutes=window_minutes)
     train_frame = frame[frame["split"] == "train"].copy()
     test_frame = frame[frame["split"] == "test"].copy()
 
@@ -56,12 +57,25 @@ def main() -> None:
     model.fit(train_frame)
     probabilities = model.predict_proba(test_frame)
 
-    output = {
-        "window_minutes": args.window_minutes,
+    return {
+        "window_minutes": window_minutes,
         "threshold": model.threshold_,
         "classification": classification_metrics(test_frame["is_sse"], probabilities, threshold=model.threshold_),
         "calibration": calibration_metrics(test_frame["is_sse"], probabilities),
     }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Run the early-growth heuristic baseline.")
+    parser.add_argument(
+        "--index-path",
+        default=str(DEFAULT_INDEX_PATH),
+        help="Path to processed event index parquet.",
+    )
+    parser.add_argument("--window-minutes", type=int, default=360, help="Observation window in minutes.")
+    args = parser.parse_args()
+
+    output = run_baseline(index_path=Path(args.index_path), window_minutes=args.window_minutes)
     print(json.dumps(output, indent=2))
 
 

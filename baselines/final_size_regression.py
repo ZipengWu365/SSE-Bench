@@ -4,10 +4,11 @@ import argparse
 import json
 from pathlib import Path
 
-from xgboost import XGBClassifier
+import numpy as np
+from xgboost import XGBRegressor
 
 from baselines.common import DEFAULT_INDEX_PATH, load_index
-from evaluation.metrics import calibration_metrics, classification_metrics
+from evaluation.metrics import regression_metrics
 from features import window_feature_columns
 
 
@@ -22,38 +23,38 @@ def run_baseline(index_path: str | Path = DEFAULT_INDEX_PATH, window_minutes: in
     train_x = train_frame[feature_columns].to_numpy(dtype=float)
     val_x = val_frame[feature_columns].to_numpy(dtype=float)
     test_x = test_frame[feature_columns].to_numpy(dtype=float)
-    train_y = train_frame["is_sse"].to_numpy(dtype=int)
-    val_y = val_frame["is_sse"].to_numpy(dtype=int)
-    test_y = test_frame["is_sse"].to_numpy(dtype=int)
 
-    positive = max(int(train_y.sum()), 1)
-    negative = max(int((1 - train_y).sum()), 1)
+    train_y = np.log1p(train_frame["final_cascade_size"].to_numpy(dtype=float))
+    val_y = np.log1p(val_frame["final_cascade_size"].to_numpy(dtype=float))
+    test_y = np.log1p(test_frame["final_cascade_size"].to_numpy(dtype=float))
 
-    model = XGBClassifier(
-        n_estimators=250,
+    model = XGBRegressor(
+        n_estimators=300,
         max_depth=6,
         learning_rate=0.05,
         subsample=0.9,
         colsample_bytree=0.9,
         reg_lambda=1.0,
         min_child_weight=5,
-        eval_metric="logloss",
+        objective="reg:squarederror",
+        eval_metric="rmse",
         random_state=42,
-        scale_pos_weight=negative / positive,
     )
     model.fit(train_x, train_y, eval_set=[(val_x, val_y)], verbose=False)
 
-    probabilities = model.predict_proba(test_x)[:, 1]
+    prediction = model.predict(test_x)
+    raw_truth = test_frame["final_cascade_size"].to_numpy(dtype=float)
+    raw_pred = np.expm1(prediction)
     return {
         "window_minutes": window_minutes,
         "features": feature_columns,
-        "classification": classification_metrics(test_y, probabilities, threshold=0.5),
-        "calibration": calibration_metrics(test_y, probabilities),
+        "log_regression": regression_metrics(test_y, prediction),
+        "raw_rmse": float(np.sqrt(np.mean((raw_truth - raw_pred) ** 2))),
     }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the XGBoost SSE classification baseline.")
+    parser = argparse.ArgumentParser(description="Run the final-cascade-size regression baseline.")
     parser.add_argument(
         "--index-path",
         default=str(DEFAULT_INDEX_PATH),

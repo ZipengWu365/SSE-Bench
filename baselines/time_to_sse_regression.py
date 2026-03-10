@@ -4,56 +4,58 @@ import argparse
 import json
 from pathlib import Path
 
-from xgboost import XGBClassifier
+import numpy as np
+from xgboost import XGBRegressor
 
 from baselines.common import DEFAULT_INDEX_PATH, load_index
-from evaluation.metrics import calibration_metrics, classification_metrics
+from evaluation.metrics import time_to_event_metrics
 from features import window_feature_columns
 
 
 def run_baseline(index_path: str | Path = DEFAULT_INDEX_PATH, window_minutes: int = 360) -> dict[str, object]:
     frame = load_index(index_path)
+    positive = frame[frame["time_to_sse_minutes"].notna()].copy()
     feature_columns = window_feature_columns(window_minutes)
 
-    train_frame = frame[frame["split"] == "train"].copy()
-    val_frame = frame[frame["split"] == "val"].copy()
-    test_frame = frame[frame["split"] == "test"].copy()
+    train_frame = positive[positive["split"] == "train"].copy()
+    val_frame = positive[positive["split"] == "val"].copy()
+    test_frame = positive[positive["split"] == "test"].copy()
 
     train_x = train_frame[feature_columns].to_numpy(dtype=float)
     val_x = val_frame[feature_columns].to_numpy(dtype=float)
     test_x = test_frame[feature_columns].to_numpy(dtype=float)
-    train_y = train_frame["is_sse"].to_numpy(dtype=int)
-    val_y = val_frame["is_sse"].to_numpy(dtype=int)
-    test_y = test_frame["is_sse"].to_numpy(dtype=int)
 
-    positive = max(int(train_y.sum()), 1)
-    negative = max(int((1 - train_y).sum()), 1)
+    train_y = np.log1p(train_frame["time_to_sse_minutes"].to_numpy(dtype=float))
+    val_y = np.log1p(val_frame["time_to_sse_minutes"].to_numpy(dtype=float))
+    test_y = test_frame["time_to_sse_minutes"].to_numpy(dtype=float)
 
-    model = XGBClassifier(
+    model = XGBRegressor(
         n_estimators=250,
-        max_depth=6,
+        max_depth=5,
         learning_rate=0.05,
         subsample=0.9,
         colsample_bytree=0.9,
         reg_lambda=1.0,
-        min_child_weight=5,
-        eval_metric="logloss",
+        min_child_weight=3,
+        objective="reg:squarederror",
+        eval_metric="rmse",
         random_state=42,
-        scale_pos_weight=negative / positive,
     )
     model.fit(train_x, train_y, eval_set=[(val_x, val_y)], verbose=False)
 
-    probabilities = model.predict_proba(test_x)[:, 1]
+    prediction = np.expm1(model.predict(test_x))
     return {
         "window_minutes": window_minutes,
         "features": feature_columns,
-        "classification": classification_metrics(test_y, probabilities, threshold=0.5),
-        "calibration": calibration_metrics(test_y, probabilities),
+        "training_events": int(len(train_frame)),
+        "validation_events": int(len(val_frame)),
+        "test_events": int(len(test_frame)),
+        "time_to_event": time_to_event_metrics(test_y, prediction),
     }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the XGBoost SSE classification baseline.")
+    parser = argparse.ArgumentParser(description="Run the time-to-SSE regression baseline.")
     parser.add_argument(
         "--index-path",
         default=str(DEFAULT_INDEX_PATH),

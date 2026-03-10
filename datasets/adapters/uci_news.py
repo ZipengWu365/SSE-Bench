@@ -22,6 +22,8 @@ DOWNLOAD_URL = (
 DATASET_NAME = "uci_news_social_feedback"
 SLICE_MINUTES = 20
 TIME_SERIES_COLUMNS = [f"TS{index}" for index in range(1, 145)]
+SENSITIVITY_QUANTILES = (0.95, 0.975, 0.99)
+SENSITIVITY_SIGMAS = (2.0, 3.0, 4.0)
 PLATFORM_COLUMNS = {
     "facebook": "Facebook",
     "googleplus": "GooglePlus",
@@ -93,6 +95,21 @@ def _load_news_table(extract_dir: Path) -> pd.DataFrame:
     news["PublishDate"] = news["PublishDate"].fillna(fallback_time)
     news = news.drop_duplicates(subset=["IDLink", "Topic"], keep="first").reset_index(drop=True)
     return news
+
+
+def _raw_news_diagnostics(extract_dir: Path) -> dict[str, int]:
+    raw_news = pd.read_csv(extract_dir / "Data" / "News_Final.csv")
+    raw_news["IDLink"] = raw_news["IDLink"].astype(int)
+    raw_news["Topic"] = raw_news["Topic"].astype(str).str.lower()
+    return {
+        "raw_news_rows": int(len(raw_news)),
+        "duplicate_idlink_topic_rows": int(raw_news.duplicated(subset=["IDLink", "Topic"]).sum()),
+        "missing_publish_dates_raw": int(raw_news["PublishDate"].isna().sum()),
+    }
+
+
+def _optional_scalar(value):
+    return None if pd.isna(value) else value
 
 
 def _build_split_lookup(
@@ -167,9 +184,14 @@ def prepare_dataset(config: UciNewsConfig | None = None) -> dict[str, object]:
     index_path = config.processed_dir / "event_index.parquet"
     summary_path = config.artifacts_dir / "uci_news_summary.json"
     thresholds_path = config.artifacts_dir / "uci_news_cohort_thresholds.csv"
+    quality_path = config.artifacts_dir / "uci_news_data_quality.csv"
+    sensitivity_path = config.artifacts_dir / "uci_news_label_sensitivity.csv"
 
     event_rows: list[dict[str, object]] = []
     cohort_rows: list[dict[str, object]] = []
+    quality_rows: list[dict[str, object]] = []
+    sensitivity_rows: list[dict[str, object]] = []
+    news_diagnostics = _raw_news_diagnostics(extract_dir)
 
     if events_path.exists():
         events_path.unlink()
@@ -183,7 +205,13 @@ def prepare_dataset(config: UciNewsConfig | None = None) -> dict[str, object]:
             feedback["IDLink"] = feedback["IDLink"].astype(int)
             feedback["Topic"] = topic
             merged = feedback.merge(news.reset_index(drop=True), on=["IDLink", "Topic"], how="left", validate="1:1")
-            engagement = _clean_engagement_matrix(merged[TIME_SERIES_COLUMNS].to_numpy(dtype=float))
+            raw_matrix = merged[TIME_SERIES_COLUMNS].to_numpy(dtype=float)
+            negative_mask = raw_matrix < 0
+            valid_mask = ~negative_mask
+            unmatched_rows = int(merged["PublishDate"].isna().sum())
+            missing_source_rows = int(merged["Source"].isna().sum())
+            leading_missing_bins = np.where(valid_mask.any(axis=1), valid_mask.argmax(axis=1), raw_matrix.shape[1])
+            engagement = _clean_engagement_matrix(raw_matrix)
 
             declared_final = merged[PLATFORM_COLUMNS[platform]].to_numpy(dtype=float)
             declared_final = np.where(declared_final >= 0, declared_final, 0)
@@ -202,12 +230,31 @@ def prepare_dataset(config: UciNewsConfig | None = None) -> dict[str, object]:
 
             crossing_mask = growth >= growth_threshold
             first_cross = np.where(crossing_mask.any(axis=1), crossing_mask.argmax(axis=1) + 1, -1)
-            is_sse = (final_size >= size_threshold) & (growth.max(axis=1) >= growth_threshold)
+            size_candidate = final_size >= size_threshold
+            growth_candidate = growth.max(axis=1) >= growth_threshold
+            is_sse = size_candidate & growth_candidate
             sentiment_mean = (
                 merged[["SentimentTitle", "SentimentHeadline"]]
                 .fillna(0.0)
                 .mean(axis=1)
                 .to_numpy(dtype=float)
+            )
+            onset_minutes = first_cross[(is_sse) & (first_cross > 0)] * SLICE_MINUTES
+
+            quality_rows.append(
+                {
+                    "platform": platform,
+                    "topic": topic,
+                    "events": int(len(merged)),
+                    "unmatched_metadata_rows": unmatched_rows,
+                    "missing_source_rows": missing_source_rows,
+                    "negative_feedback_cells": int(negative_mask.sum()),
+                    "negative_feedback_rate": float(negative_mask.mean()),
+                    "series_with_negative": int(negative_mask.any(axis=1).sum()),
+                    "all_missing_series": int((~valid_mask).all(axis=1).sum()),
+                    "mean_leading_missing_bins": float(leading_missing_bins.mean()),
+                    "median_leading_missing_bins": float(np.median(leading_missing_bins)),
+                }
             )
 
             cohort_rows.append(
@@ -217,10 +264,35 @@ def prepare_dataset(config: UciNewsConfig | None = None) -> dict[str, object]:
                     "events": int(len(merged)),
                     "size_threshold": size_threshold,
                     "growth_threshold": growth_threshold,
+                    "size_candidate_events": int(size_candidate.sum()),
+                    "growth_candidate_events": int(growth_candidate.sum()),
+                    "size_only_events": int((size_candidate & ~growth_candidate).sum()),
+                    "growth_only_events": int((growth_candidate & ~size_candidate).sum()),
                     "sse_events": int(is_sse.sum()),
                     "sse_rate": float(is_sse.mean()),
+                    "median_time_to_sse_minutes": float(np.median(onset_minutes)) if onset_minutes.size else None,
                 }
             )
+
+            positive_growth_mean = float(positive_growth.mean()) if positive_growth.size else 0.0
+            positive_growth_std = float(positive_growth.std()) if positive_growth.size else 0.0
+            for quantile in SENSITIVITY_QUANTILES:
+                for sigma in SENSITIVITY_SIGMAS:
+                    alt_size_threshold = float(np.quantile(final_size, quantile))
+                    alt_growth_threshold = float(max(1.0, positive_growth_mean + sigma * positive_growth_std))
+                    alt_labels = (final_size >= alt_size_threshold) & (growth.max(axis=1) >= alt_growth_threshold)
+                    sensitivity_rows.append(
+                        {
+                            "platform": platform,
+                            "topic": topic,
+                            "size_quantile": quantile,
+                            "growth_sigma": sigma,
+                            "size_threshold": alt_size_threshold,
+                            "growth_threshold": alt_growth_threshold,
+                            "sse_events": int(alt_labels.sum()),
+                            "sse_rate": float(alt_labels.mean()),
+                        }
+                    )
 
             for row_index, row in enumerate(merged.itertuples(index=False)):
                 event_id = f"{DATASET_NAME}::{platform}::{topic}::{int(row.IDLink)}"
@@ -237,7 +309,9 @@ def prepare_dataset(config: UciNewsConfig | None = None) -> dict[str, object]:
                     dataset=DATASET_NAME,
                     platform=platform,
                     topic=topic,
-                    start_time=pd.Timestamp(row.PublishDate).to_pydatetime(),
+                    start_time=pd.Timestamp(
+                        row.PublishDate if not pd.isna(row.PublishDate) else "1970-01-01T00:00:00Z"
+                    ).to_pydatetime(),
                     engagement_series=engagement_series,
                     sentiment_series=sentiment_series,
                     cascade_graph=None,
@@ -246,9 +320,9 @@ def prepare_dataset(config: UciNewsConfig | None = None) -> dict[str, object]:
                     final_cascade_size=int(final_size[row_index]),
                     split=split,
                     metadata={
-                        "source": row.Source,
-                        "title": row.Title,
-                        "headline": row.Headline,
+                        "source": _optional_scalar(row.Source),
+                        "title": _optional_scalar(row.Title),
+                        "headline": _optional_scalar(row.Headline),
                         "topic": topic,
                         "slice_minutes": SLICE_MINUTES,
                         "sentiment_title": float(row.SentimentTitle),
@@ -293,6 +367,8 @@ def prepare_dataset(config: UciNewsConfig | None = None) -> dict[str, object]:
 
     cohort_frame = pd.DataFrame(cohort_rows)
     cohort_frame.to_csv(thresholds_path, index=False, quoting=csv.QUOTE_MINIMAL)
+    pd.DataFrame(quality_rows).to_csv(quality_path, index=False, quoting=csv.QUOTE_MINIMAL)
+    pd.DataFrame(sensitivity_rows).to_csv(sensitivity_path, index=False, quoting=csv.QUOTE_MINIMAL)
 
     split_counts = {
         split: int(count)
@@ -309,11 +385,28 @@ def prepare_dataset(config: UciNewsConfig | None = None) -> dict[str, object]:
         "processed_events_path": str(events_path),
         "processed_index_path": str(index_path),
         "split_boundaries": split_boundaries,
+        "raw_news_rows": news_diagnostics["raw_news_rows"],
+        "deduplicated_news_rows": int(len(news)),
+        "duplicate_news_rows_removed": news_diagnostics["duplicate_idlink_topic_rows"],
+        "missing_publish_dates_raw": news_diagnostics["missing_publish_dates_raw"],
         "total_events": int(len(index_frame)),
         "sse_events": int(index_frame["is_sse"].sum()),
         "sse_rate": float(index_frame["is_sse"].mean()),
+        "positive_time_to_sse_labels": int(index_frame["time_to_sse_minutes"].notna().sum()),
+        "median_time_to_sse_minutes": float(index_frame.loc[index_frame["time_to_sse_minutes"].notna(), "time_to_sse_minutes"].median()),
         "split_counts": split_counts,
         "platform_counts": platform_counts,
+        "negative_feedback_cells_total": int(sum(row["negative_feedback_cells"] for row in quality_rows)),
+        "negative_feedback_rate_total": float(
+            sum(row["negative_feedback_cells"] for row in quality_rows)
+            / (len(index_frame) * len(TIME_SERIES_COLUMNS))
+        ),
+        "series_with_negative_total": int(sum(row["series_with_negative"] for row in quality_rows)),
+        "artifacts": {
+            "cohort_thresholds": str(thresholds_path),
+            "data_quality": str(quality_path),
+            "label_sensitivity": str(sensitivity_path),
+        },
         "observation_windows_minutes": list(OBSERVATION_WINDOWS_MINUTES),
         "slice_minutes": SLICE_MINUTES,
     }

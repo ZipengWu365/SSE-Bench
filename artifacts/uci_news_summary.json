@@ -8,9 +8,15 @@
     "train_cutoff": "2016-04-18T19:24:26+00:00",
     "val_cutoff": "2016-05-26T10:21:00+00:00"
   },
+  "raw_news_rows": 93239,
+  "deduplicated_news_rows": 93235,
+  "duplicate_news_rows_removed": 4,
+  "missing_publish_dates_raw": 0,
   "total_events": 260515,
   "sse_events": 1507,
   "sse_rate": 0.005784695698904094,
+  "positive_time_to_sse_labels": 1507,
+  "median_time_to_sse_minutes": 560.0,
   "split_counts": {
     "test": 39078,
     "train": 182362,
@@ -20,6 +26,14 @@
     "facebook": 83161,
     "googleplus": 88677,
     "linkedin": 88677
+  },
+  "negative_feedback_cells_total": 4981079,
+  "negative_feedback_rate_total": 0.1327786361203343,
+  "series_with_negative_total": 199379,
+  "artifacts": {
+    "cohort_thresholds": "artifacts\\uci_news_cohort_thresholds.csv",
+    "data_quality": "artifacts\\uci_news_data_quality.csv",
+    "label_sensitivity": "artifacts\\uci_news_label_sensitivity.csv"
   },
   "observation_windows_minutes": [
     20,

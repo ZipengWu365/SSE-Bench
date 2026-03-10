@@ -42,6 +42,10 @@ Metrics:
 * `MAE`
 * `Concordance index`
 
+v0.1 evaluation note:
+
+* this task is evaluated only on SSE-positive events with observed onset times
+
 ### Task 3: Final Cascade Size
 
 Input:
@@ -75,6 +79,11 @@ Metrics:
 
 * `Recall@k`
 * `NDCG`
+
+v0.1 retrieval oracle:
+
+* relevant analogues are defined by full-trajectory nearest neighbours among historical SSE-positive events
+* baselines retrieve using only early-window trajectories and are scored against that full-trajectory oracle
 
 ## Event Object
 
@@ -193,6 +202,7 @@ Adapter mapping:
 * `Facebook_*`, `GooglePlus_*`, and `LinkedIn_*` tables provide 144 cumulative feedback bins
 * negative counts in the raw time series are treated as missing, then prefix-filled with `0` and converted into monotone cumulative trajectories
 * title/headline sentiment is represented as a static one-step sentiment series and also copied into `metadata`
+* the adapter emits data-quality and label-sensitivity artifacts so proxy-label assumptions are auditable
 
 ## Processed Artifacts
 
@@ -202,6 +212,9 @@ The preparation pipeline emits:
 * `data/processed/uci_news_sse/event_index.parquet`
 * `artifacts/uci_news_summary.json`
 * `artifacts/uci_news_cohort_thresholds.csv`
+* `artifacts/uci_news_data_quality.csv`
+* `artifacts/uci_news_label_sensitivity.csv`
+* `artifacts/uci_news_baselines.json`
 
 `events.jsonl.gz` contains the full schema objects. `event_index.parquet` stores scalar metadata and precomputed early-window features for fast experimentation.
 
@@ -211,9 +224,16 @@ Implemented:
 
 * early-growth heuristic
 * XGBoost classifier for Task 1
+* XGBoost regressor for Task 2
+* XGBoost regressor for Task 3
+* trajectory-retrieval baseline for Task 4
 
 Planned:
 
 * temporal neural baselines for sequence modeling
 * retrieval baselines with richer distance functions
 * graph-aware baselines once a cascade-graph adapter is added
+
+## Validity Notes
+
+The UCI adapter is intentionally framed as a proxy-SSE benchmark component. It supports early event-level forecasting and reproducible temporal evaluation, but it does not yet provide explicit diffusion graphs or direct cross-community spread labels. Claims about digital super-spreading should therefore be interpreted as operational rather than fully graph-grounded in v0.1.

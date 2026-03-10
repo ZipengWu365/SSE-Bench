@@ -1,0 +1,91 @@
+{
+  "window_minutes": 360,
+  "task_1_heuristic": {
+    "window_minutes": 360,
+    "threshold": 0.95,
+    "classification": {
+      "auprc": 0.07991792802384773,
+      "f1": 0.19774501300954034,
+      "precision": 0.12582781456953643,
+      "recall": 0.46153846153846156,
+      "auroc": 0.7493746648640527
+    },
+    "calibration": {
+      "brier_score": 0.29870480602926214,
+      "ece": 0.4936921029735401
+    }
+  },
+  "task_1_xgboost": {
+    "window_minutes": 360,
+    "features": [
+      "w360_observed_size",
+      "w360_growth_rate",
+      "w360_max_increment",
+      "w360_mean_increment",
+      "w360_burstiness",
+      "w360_acceleration",
+      "w360_sentiment_mean",
+      "w360_sentiment_abs"
+    ],
+    "classification": {
+      "auprc": 0.19025495737298911,
+      "f1": 0.05226209048361934,
+      "precision": 0.02745339069862733,
+      "recall": 0.5425101214574899,
+      "auroc": 0.7673876322988739
+    },
+    "calibration": {
+      "brier_score": 0.11928710809020711,
+      "ece": 0.28488714947628196
+    }
+  },
+  "task_2_time_to_sse": {
+    "window_minutes": 360,
+    "features": [
+      "w360_observed_size",
+      "w360_growth_rate",
+      "w360_max_increment",
+      "w360_mean_increment",
+      "w360_burstiness",
+      "w360_acceleration",
+      "w360_sentiment_mean",
+      "w360_sentiment_abs"
+    ],
+    "training_events": 1109,
+    "validation_events": 151,
+    "test_events": 247,
+    "time_to_event": {
+      "mae": 346.6873245702581,
+      "concordance_index": 0.7780616678833385
+    }
+  },
+  "task_3_final_size": {
+    "window_minutes": 360,
+    "features": [
+      "w360_observed_size",
+      "w360_growth_rate",
+      "w360_max_increment",
+      "w360_mean_increment",
+      "w360_burstiness",
+      "w360_acceleration",
+      "w360_sentiment_mean",
+      "w360_sentiment_abs"
+    ],
+    "log_regression": {
+      "rmse": 1.2435805870882783,
+      "spearman": 0.5015602041772054
+    },
+    "raw_rmse": 277.2422626489176
+  },
+  "task_4_retrieval": {
+    "window_minutes": 360,
+    "query_events": 247,
+    "candidate_events": 1260,
+    "k": 10,
+    "oracle_k": 25,
+    "metrics": {
+      "recall_at_k": 0.128582995951417,
+      "ndcg_at_k": 0.3357446258831688
+    }
+  }
+}

@@ -10,6 +10,16 @@ from schema.event import Event
 
 
 OBSERVATION_WINDOWS_MINUTES = (20, 60, 360, 1440)
+BASE_FEATURE_NAMES = (
+    "observed_size",
+    "growth_rate",
+    "max_increment",
+    "mean_increment",
+    "burstiness",
+    "acceleration",
+    "sentiment_mean",
+    "sentiment_abs",
+)
 
 
 def window_to_steps(window_minutes: int, slice_minutes: int = 20) -> int:
@@ -39,6 +49,10 @@ def _extract_from_arrays(
         "sentiment_mean": float(sentiment.mean()) if sentiment.size else 0.0,
         "sentiment_abs": float(np.abs(sentiment).mean()) if sentiment.size else 0.0,
     }
+
+
+def window_feature_columns(window_minutes: int) -> list[str]:
+    return [f"w{window_minutes}_{name}" for name in BASE_FEATURE_NAMES]
 
 
 def extract_window_features(

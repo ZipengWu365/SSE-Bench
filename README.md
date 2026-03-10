@@ -67,8 +67,9 @@ This repository now includes:
 * a UCI adapter for `News Popularity in Multiple Social Media Platforms`
 * preprocessing code that downloads raw data and emits unified `Event` objects
 * feature extraction utilities
-* baseline code for an early-growth heuristic and an XGBoost classifier
+* baseline code for Task 1 classification, Task 2 time-to-SSE regression, Task 3 final-size regression, and Task 4 trajectory retrieval
 * evaluation helpers for classification, regression, retrieval, and calibration
+* data-quality, onset, and label-sensitivity artifacts for the UCI adapter
 
 ## Dataset Adapter In v0.1
 
@@ -86,6 +87,12 @@ Adapter decisions:
 * default observation windows are `20m`, `1h`, `6h`, and `24h`
 * title and headline sentiment are stored as a length-1 static sentiment series
 * strict chronological `train/val/test` splits are assigned from publication time
+* v0.1 should be interpreted as a **proxy-SSE benchmark** on engagement trajectories, not yet a graph-grounded super-spreading benchmark
+
+Task-specific notes for v0.1:
+
+* Task 2 evaluates only SSE-positive events with observed onset times
+* Task 4 retrieves analogues only among historical SSE-positive events and uses full-trajectory nearest neighbours as the relevance oracle
 
 ## Quickstart
 
@@ -106,6 +113,14 @@ Run the XGBoost baseline:
 ```bash
 python -m baselines.xgboost_baseline --window-minutes 360
 ```
+
+Run the full v0.1 task suite and write a single benchmark report:
+
+```bash
+python -m scripts.run_uci_benchmark_suite --window-minutes 360
+```
+
+This also writes `artifacts/uci_news_baselines.json`.
 
 ## Repository Layout
 
@@ -136,6 +151,10 @@ SSE-Bench is aimed at studying digital super-spreading dynamics:
 * retrieval of historical analogues
 
 Longer term, the same benchmark format can extend to intervention evaluation, counterfactual analysis, and simulation-based policy studies.
+
+## Current Validity Boundary
+
+The current UCI adapter is a strong starting point for event-level early forecasting, but it does not yet observe explicit cascade graphs or cross-community diffusion. In paper terms, v0.1 is best framed as an operational proxy for digital super-spreading, not a final gold-standard benchmark definition.
 
 ## Citation
 
