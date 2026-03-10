@@ -1,0 +1,31 @@
+{
+  "dataset": "uci_news_social_feedback",
+  "download_url": "https://archive.ics.uci.edu/static/public/432/news%2Bpopularity%2Bin%2Bmultiple%2Bsocial%2Bmedia%2Bplatforms.zip",
+  "raw_zip_path": "data\\raw\\uci_news\\uci_news.zip",
+  "processed_events_path": "data\\processed\\uci_news_sse\\events.jsonl.gz",
+  "processed_index_path": "data\\processed\\uci_news_sse\\event_index.parquet",
+  "split_boundaries": {
+    "train_cutoff": "2016-04-18T19:24:26+00:00",
+    "val_cutoff": "2016-05-26T10:21:00+00:00"
+  },
+  "total_events": 260515,
+  "sse_events": 1507,
+  "sse_rate": 0.005784695698904094,
+  "split_counts": {
+    "test": 39078,
+    "train": 182362,
+    "val": 39075
+  },
+  "platform_counts": {
+    "facebook": 83161,
+    "googleplus": 88677,
+    "linkedin": 88677
+  },
+  "observation_windows_minutes": [
+    20,
+    60,
+    360,
+    1440
+  ],
+  "slice_minutes": 20
+}
