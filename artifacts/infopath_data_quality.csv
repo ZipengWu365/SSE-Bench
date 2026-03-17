@@ -1,0 +1,4 @@
+topic,source_member,site_dictionary_size,events_parsed,skipped_lines,truncated_events,overflow_infections_total,mean_final_cascade_size,mean_duration_hours
+abroad,memes-w5-all-2011-03-2012-02-n5000-call-nc10-cl2-keywords-in-body-abroad-cascades.txt,5000,20000,0,1722,11120,2.1876,478.3815654904499
+airstrikes,memes-w5-all-2011-03-2012-02-n5000-call-nc10-cl2-keywords-in-body-airstrikes-cascades.txt,5000,20000,0,367,2358,4.07955,72.91149927489978
+alcohol,memes-w5-all-2011-03-2012-02-n5000-call-nc10-cl2-keywords-in-body-alcohol-cascades.txt,5000,20000,0,2503,16844,2.59355,754.617817907

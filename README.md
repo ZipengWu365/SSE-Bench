@@ -2,44 +2,65 @@
 
 ## Super-Spreading Event Forecasting Benchmark
 
-Predict whether an emerging social event will become a **super-spreading event (SSE)** using only early observations.
+SSE-Bench studies early warning for **super-spreading social events**: can we tell, from only the first slice of signals, whether an emerging event will transition from ordinary diffusion into an explosive cascade?
 
-SSE-Bench studies phase transitions in social diffusion systems: when ordinary propagation turns into explosive cascades. The benchmark is event-centric, not post-centric. The core question is whether an emerging event will cross into a super-spreading regime.
+## Current Status
 
-## Tasks
+SSE-Bench is currently a **v0.1 proxy-SSE benchmark** with working local pipelines for:
 
-SSE-Bench v0.1 defines four benchmark tasks.
+* `uci_news_sse`
+* `infopath_sse`
 
-1. `SSE Detection`: predict `P(event becomes SSE)`.
-2. `Time-to-SSE`: predict the onset time of the super-spreading phase.
-3. `Final Cascade Size`: predict `log(final_cascade_size)`.
-4. `Historical Analogue Retrieval`: retrieve the most similar past events from early trajectories.
+The current repo state is a bridge toward **v0.2 multi-dataset SSE benchmarking** with graph-aware support and a second cascade-oriented adapter already wired into the benchmark workflow.
 
-Default evaluation metrics:
+This means:
 
-* Classification: `AUROC`, `AUPRC`, `F1`
-* Regression: `RMSE`, `Spearman`
-* Time-to-event: `MAE`, `Concordance index`
-* Retrieval: `Recall@k`, `NDCG`
-* Calibration: `Brier score`, `Expected Calibration Error`
+* v0.1 is real and runnable.
+* v0.1 should be described honestly as an **operational proxy** for SSE, not yet a graph-grounded gold standard.
+* the current development direction is to add a second dataset and graph-aware baselines without changing the event-level benchmark identity.
 
-## SSE Definition
+## Benchmark Tasks
 
-An event is an SSE when it satisfies both a size criterion and a burst criterion.
+SSE-Bench defines four linked tasks around the same event object.
+
+1. `SSE Detection`
+   Predict `P(event becomes SSE)`.
+   Metrics: `AUROC`, `AUPRC`, `F1`, calibration metrics.
+
+2. `Time-to-SSE`
+   Predict when the event enters the super-spreading phase.
+   Metrics: `MAE`, `Concordance index`.
+
+3. `Final Cascade Size`
+   Predict `log(final_cascade_size)`.
+   Metrics: `RMSE`, `Spearman`.
+
+4. `Historical Analogue Retrieval`
+   Retrieve the most similar historical events from early trajectories.
+   Metrics: `Recall@k`, `NDCG`.
+
+## SSE Definition (Operational Default)
+
+The default operational SSE label combines size and burstiness:
 
 ```text
-final_size >= top_q_percentile
-and
-max_growth >= mean_positive_growth + 3 * std_positive_growth
+is_sse = (
+  final_cascade_size >= top_q_percentile
+  and
+  max_growth >= mean_positive_growth + sigma * std_positive_growth
+)
 ```
 
-The default `q` is `99%`. Thresholds are computed within a dataset cohort so that topic and platform scale differences do not dominate the label.
+Defaults:
 
-The framework also leaves room for future structural SSE definitions, such as cross-community spread or graph-depth transitions.
+* `q = 0.99`
+* `sigma = 3.0`
 
-## Event Schema
+Thresholds are computed within a dataset cohort so platform or topic scale does not dominate the label. This is the current **proxy-SSE** definition; future graph-aware adapters may add structural criteria such as cross-community spread or cascade depth.
 
-Each adapter maps raw data into a unified `Event` object.
+## Event Object
+
+All adapters map raw data into a unified event representation.
 
 ```python
 class Event:
@@ -58,103 +79,89 @@ class Event:
     metadata: dict
 ```
 
-## Implemented In v0.1
+The benchmark is event-centric rather than post-centric. The goal is not to rank isolated posts, but to understand whether an unfolding event is entering a super-spreading regime.
 
-This repository now includes:
+## What Is Implemented
 
-* `benchmark_spec.md` with the benchmark protocol
-* `schema/event.py` with serialization and validation helpers
-* a UCI adapter for `News Popularity in Multiple Social Media Platforms`
-* preprocessing code that downloads raw data and emits unified `Event` objects
-* feature extraction utilities
-* baseline code for Task 1 classification, Task 2 time-to-SSE regression, Task 3 final-size regression, and Task 4 trajectory retrieval
-* evaluation helpers for classification, regression, retrieval, and calibration
-* data-quality, onset, and label-sensitivity artifacts for the UCI adapter
+Current repo contents include:
 
-## Dataset Adapter In v0.1
+* event schema and serialization helpers
+* a working UCI dataset adapter and preprocessing pipeline
+* a working InfoPath cascade adapter and preprocessing pipeline
+* early-warning baselines for Tasks 1-4 on the current proxy dataset
+* a graph-aware Task 1 classifier for datasets that expose cascade structure
+* diagnostics for data quality, label sensitivity, and baseline results
+* all-dataset orchestration entrypoints
+* tracked validity notes for publication-safe claim boundaries
 
-The first concrete adapter uses the official UCI dataset:
+Current artifacts are centered on:
 
-`News Popularity in Multiple Social Media Platforms`
+* UCI data preparation: `python -m scripts.prepare_uci_news`
+* InfoPath data preparation: `python -m scripts.prepare_infopath`
+* UCI task suite: `python -m scripts.run_uci_benchmark_suite`
+* InfoPath task suite: `python -m scripts.run_infopath_benchmark_suite`
 
-Source:
-[UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/432/news+popularity+in+multiple+social+media+platforms)
+All-dataset wrappers are also available:
 
-Adapter decisions:
+```bash
+python -m scripts.prepare_all_datasets
+python -m scripts.run_all_benchmark_suites
+```
 
-* each `(platform, news item)` pair is treated as one event
-* 144 cumulative engagement bins at 20-minute resolution define the trajectory
-* default observation windows are `20m`, `1h`, `6h`, and `24h`
-* title and headline sentiment are stored as a length-1 static sentiment series
-* strict chronological `train/val/test` splits are assigned from publication time
-* v0.1 should be interpreted as a **proxy-SSE benchmark** on engagement trajectories, not yet a graph-grounded super-spreading benchmark
-
-Task-specific notes for v0.1:
-
-* Task 2 evaluates only SSE-positive events with observed onset times
-* Task 4 retrieves analogues only among historical SSE-positive events and uses full-trajectory nearest neighbours as the relevance oracle
+Otherwise, continue using the per-dataset entrypoints above.
 
 ## Quickstart
 
-Prepare the UCI dataset and generate processed SSE-Bench artifacts:
+Prepare the current UCI benchmark artifacts:
 
 ```bash
 python -m scripts.prepare_uci_news
 ```
 
-Run the simple heuristic baseline on the processed events:
+Prepare the current InfoPath benchmark artifacts:
 
 ```bash
-python -m baselines.early_growth --window-minutes 360
+python -m scripts.prepare_infopath --stream-remote
 ```
 
-Run the XGBoost baseline:
-
-```bash
-python -m baselines.xgboost_baseline --window-minutes 360
-```
-
-Run the full v0.1 task suite and write a single benchmark report:
+Run the current UCI baseline suite:
 
 ```bash
 python -m scripts.run_uci_benchmark_suite --window-minutes 360
 ```
 
-This also writes `artifacts/uci_news_baselines.json`.
+Run the current InfoPath baseline suite:
 
-## Repository Layout
-
-```text
-sse-bench/
-|- README.md
-|- benchmark_spec.md
-|- pyproject.toml
-|- artifacts/
-|- baselines/
-|- datasets/
-|  `- adapters/
-|- evaluation/
-|- features/
-|- retrieval/
-|- schema/
-|- scripts/
-`- data/
+```bash
+python -m scripts.run_infopath_benchmark_suite --window-minutes 360
 ```
 
-## Research Direction
+Run individual baselines:
 
-SSE-Bench is aimed at studying digital super-spreading dynamics:
+```bash
+python -m baselines.early_growth --window-minutes 360
+python -m baselines.xgboost_baseline --window-minutes 360
+python -m baselines.time_to_sse_regression --window-minutes 360
+python -m baselines.final_size_regression --window-minutes 360
+python -m baselines.trajectory_retrieval --window-minutes 360
+python -m baselines.graph_cascade_classifier --events-path data/processed/infopath_sse/events.jsonl.gz
+```
 
-* early warning signals of diffusion explosions
-* onset timing of super-spreading behavior
-* uncertainty-aware forecasting
-* retrieval of historical analogues
+## Validity Boundary
 
-Longer term, the same benchmark format can extend to intervention evaluation, counterfactual analysis, and simulation-based policy studies.
+What is currently safe to claim:
 
-## Current Validity Boundary
+* SSE-Bench is a reproducible **event-level early forecasting benchmark**.
+* The current UCI implementation supports strict chronological evaluation and multiple downstream tasks.
+* The current SSE label is an operational proxy based on trajectory scale and growth bursts.
 
-The current UCI adapter is a strong starting point for event-level early forecasting, but it does not yet observe explicit cascade graphs or cross-community diffusion. In paper terms, v0.1 is best framed as an operational proxy for digital super-spreading, not a final gold-standard benchmark definition.
+What is **not** safe to claim yet:
+
+* that v0.1 fully captures graph-grounded super-spreading
+* that the benchmark is already multi-domain or multi-platform in a publication-grade sense
+* that the current proxy label is equivalent to a gold-standard diffusion-phase-transition label
+
+For more detail, see `docs/validity_notes.md`.
 
 ## Citation
 

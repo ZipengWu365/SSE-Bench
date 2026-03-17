@@ -14,6 +14,20 @@ from retrieval.trajectory import trajectory_matrix
 from schema.event import load_events_jsonl
 
 
+def _infer_slice_minutes(events, default: int = 20) -> int:
+    for event in events:
+        value = event.metadata.get("slice_minutes")
+        if value is None:
+            continue
+        try:
+            minutes = int(value)
+        except (TypeError, ValueError):
+            continue
+        if minutes > 0:
+            return minutes
+    return default
+
+
 def run_baseline(
     events_path: str | Path = DEFAULT_EVENTS_PATH,
     window_minutes: int = 360,
@@ -21,6 +35,7 @@ def run_baseline(
     oracle_k: int = 25,
     max_queries: int | None = None,
     seed: int = 42,
+    slice_minutes: int | None = None,
 ) -> dict[str, object]:
     events = load_events_jsonl(Path(events_path))
     candidates = [event for event in events if event.is_sse and event.split in {"train", "val"}]
@@ -34,11 +49,13 @@ def run_baseline(
     if not queries or not candidates:
         raise ValueError("Trajectory retrieval requires positive SSE queries and historical candidates.")
 
-    early_steps = window_to_steps(window_minutes)
+    effective_slice_minutes = slice_minutes or _infer_slice_minutes(events)
+    early_steps = window_to_steps(window_minutes, slice_minutes=effective_slice_minutes)
+    full_steps = max(len(event.engagement_series) for event in (*queries, *candidates))
     query_early = trajectory_matrix(queries, steps=early_steps)
-    query_full = trajectory_matrix(queries, steps=None)
+    query_full = trajectory_matrix(queries, steps=full_steps)
     candidate_early = trajectory_matrix(candidates, steps=early_steps)
-    candidate_full = trajectory_matrix(candidates, steps=None)
+    candidate_full = trajectory_matrix(candidates, steps=full_steps)
 
     predicted_scores = query_early @ candidate_early.T
     oracle_scores = query_full @ candidate_full.T
@@ -52,6 +69,7 @@ def run_baseline(
     metrics = retrieval_metrics(truth, predicted_scores, k=k)
     return {
         "window_minutes": window_minutes,
+        "slice_minutes": effective_slice_minutes,
         "query_events": len(queries),
         "candidate_events": len(candidates),
         "k": k,
@@ -76,6 +94,12 @@ def main() -> None:
         default=None,
         help="Optional cap on the number of SSE-positive test queries.",
     )
+    parser.add_argument(
+        "--slice-minutes",
+        type=int,
+        default=None,
+        help="Override the engagement-series slice width in minutes. Defaults to adapter metadata or 20.",
+    )
     args = parser.parse_args()
 
     output = run_baseline(
@@ -84,6 +108,7 @@ def main() -> None:
         k=args.k,
         oracle_k=args.oracle_k,
         max_queries=args.max_queries,
+        slice_minutes=args.slice_minutes,
     )
     print(json.dumps(output, indent=2))
 

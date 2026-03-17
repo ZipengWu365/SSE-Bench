@@ -1,0 +1,122 @@
+{
+  "dataset": "snap_infopath_keywords",
+  "window_minutes": 360,
+  "task_1_heuristic": {
+    "window_minutes": 360,
+    "threshold": 0.95,
+    "classification": {
+      "auprc": 0.19567302338182543,
+      "f1": 0.3401360544217687,
+      "precision": 0.28901734104046245,
+      "recall": 0.4132231404958678,
+      "auroc": 0.9032310939004651
+    },
+    "calibration": {
+      "brier_score": 0.27648633279957996,
+      "ece": 0.48660366870483596
+    }
+  },
+  "task_1_xgboost": {
+    "window_minutes": 360,
+    "features": [
+      "w360_observed_size",
+      "w360_growth_rate",
+      "w360_max_increment",
+      "w360_mean_increment",
+      "w360_burstiness",
+      "w360_acceleration",
+      "w360_sentiment_mean",
+      "w360_sentiment_abs"
+    ],
+    "classification": {
+      "auprc": 0.1565975373627118,
+      "f1": 0.09302325581395349,
+      "precision": 0.05057803468208093,
+      "recall": 0.5785123966942148,
+      "auroc": 0.9034760289600784
+    },
+    "calibration": {
+      "brier_score": 0.10817561675076454,
+      "ece": 0.12600886081728613
+    }
+  },
+  "task_1_graph": {
+    "features": [
+      "graph_node_count",
+      "graph_edge_count",
+      "graph_density",
+      "graph_avg_out_degree",
+      "graph_max_out_degree",
+      "graph_root_count",
+      "graph_component_count",
+      "graph_max_depth",
+      "graph_cross_community_ratio",
+      "graph_structural_virality"
+    ],
+    "graph_signal_events": 60000,
+    "train_events": 42408,
+    "val_events": 8597,
+    "test_events": 8995,
+    "classification": {
+      "auprc": 0.35555620913564134,
+      "f1": 0.4801587301587302,
+      "precision": 0.31592689295039167,
+      "recall": 1.0,
+      "auroc": 0.9793397742872203
+    },
+    "calibration": {
+      "brier_score": 0.028034340409532746,
+      "ece": 0.02875104364336523
+    }
+  },
+  "task_2_time_to_sse": {
+    "window_minutes": 360,
+    "features": [
+      "w360_observed_size",
+      "w360_growth_rate",
+      "w360_max_increment",
+      "w360_mean_increment",
+      "w360_burstiness",
+      "w360_acceleration",
+      "w360_sentiment_mean",
+      "w360_sentiment_abs"
+    ],
+    "training_events": 190,
+    "validation_events": 60,
+    "test_events": 121,
+    "time_to_event": {
+      "mae": 481.5674693703975,
+      "concordance_index": 0.664899026587244
+    }
+  },
+  "task_3_final_size": {
+    "window_minutes": 360,
+    "features": [
+      "w360_observed_size",
+      "w360_growth_rate",
+      "w360_max_increment",
+      "w360_mean_increment",
+      "w360_burstiness",
+      "w360_acceleration",
+      "w360_sentiment_mean",
+      "w360_sentiment_abs"
+    ],
+    "log_regression": {
+      "rmse": 0.41773403346926447,
+      "spearman": 0.9715074148659082
+    },
+    "raw_rmse": 9.234434735897016
+  },
+  "task_4_retrieval": {
+    "window_minutes": 360,
+    "slice_minutes": 60,
+    "query_events": 121,
+    "candidate_events": 250,
+    "k": 10,
+    "oracle_k": 25,
+    "metrics": {
+      "recall_at_k": 0.16793388429752062,
+      "ndcg_at_k": 0.36415493458076154
+    }
+  }
+}

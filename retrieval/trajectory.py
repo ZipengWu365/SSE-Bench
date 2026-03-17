@@ -29,11 +29,14 @@ def trajectory_matrix(
     log_scale: bool = True,
     normalize: bool = True,
 ) -> np.ndarray:
+    if not events:
+        return np.empty((0, 0), dtype=float)
+    target_steps = steps or max(len(event.engagement_series) for event in events)
     return np.vstack(
         [
             trajectory_vector(
                 event.engagement_series,
-                steps=steps,
+                steps=target_steps,
                 log_scale=log_scale,
                 normalize=normalize,
             )

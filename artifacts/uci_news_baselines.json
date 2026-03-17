@@ -79,6 +79,7 @@
   },
   "task_4_retrieval": {
     "window_minutes": 360,
+    "slice_minutes": 20,
     "query_events": 247,
     "candidate_events": 1260,
     "k": 10,

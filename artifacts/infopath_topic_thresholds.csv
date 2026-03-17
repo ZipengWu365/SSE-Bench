@@ -1,0 +1,4 @@
+topic,events,size_threshold,growth_threshold,use_global_thresholds
+abroad,20000,23.0,5.014657004067253,False
+airstrikes,20000,60.0,13.639586981837589,False
+alcohol,20000,36.0,5.899354068766101,False

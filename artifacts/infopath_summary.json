@@ -1,0 +1,38 @@
+{
+  "dataset": "snap_infopath_keywords",
+  "download_url": "https://snap.stanford.edu/infopath/memes-w5-all-2011-03-2012-02-n5000-call-nc10-cl2-cascades-keywords.tgz",
+  "stream_remote": true,
+  "max_keyword_files": 3,
+  "max_events": 60000,
+  "slice_minutes": 60,
+  "max_observation_bins": 336,
+  "raw_archive_path": "data\\raw\\infopath\\infopath_cascades_keywords.tgz",
+  "extract_dir": "data\\raw\\infopath\\extracted",
+  "processed_events_path": "data\\processed\\infopath_sse\\events.jsonl.gz",
+  "processed_index_path": "data\\processed\\infopath_sse\\event_index.parquet",
+  "split_boundaries": {
+    "train_cutoff": "2011-03-10T15:36:00+00:00",
+    "val_cutoff": "2011-03-22T23:00:00+00:00"
+  },
+  "total_events": 60000,
+  "sse_events": 371,
+  "sse_rate": 0.006183333333333333,
+  "positive_time_to_sse_labels": 371,
+  "split_counts": {
+    "test": 8995,
+    "train": 42408,
+    "val": 8597
+  },
+  "topic_counts": {
+    "abroad": 20000,
+    "airstrikes": 20000,
+    "alcohol": 20000
+  },
+  "malformed_lines_total": 0,
+  "timeseries_overflow_total": 30322,
+  "median_time_to_sse_minutes": 480.0,
+  "artifacts": {
+    "topic_thresholds": "artifacts\\infopath_topic_thresholds.csv",
+    "data_quality": "artifacts\\infopath_data_quality.csv"
+  }
+}

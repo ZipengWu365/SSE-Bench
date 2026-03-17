@@ -1,8 +1,28 @@
-# SSE-Bench Benchmark Specification v0.1
+# SSE-Bench Benchmark Specification v0.1 -> v0.2 Transition
 
 ## Objective
 
-SSE-Bench evaluates whether models can detect an upcoming super-spreading event from only early observable signals. The benchmark is designed for event-level forecasting rather than single-post popularity prediction.
+SSE-Bench evaluates whether a model can identify, from only early observations, that an emerging social event will become a super-spreading event. The benchmark is event-level by construction and is intended for early warning, timing, impact estimation, and historical analogue retrieval.
+
+## Scope By Phase
+
+### v0.1
+
+Stable and runnable:
+
+* two dataset paths (`uci_news_sse`, `infopath_sse`)
+* strict chronological evaluation
+* Tasks 1-4 defined and runnable on the current adapter
+* diagnostics for label sensitivity and data quality
+* a graph-aware Task 1 baseline for adapters with cascade structure
+
+### v0.2
+
+Target direction:
+
+* second dataset with cascade-oriented structure
+* graph-aware baselines and graph-derived event signals
+* stronger construct validity for the term "super-spreading"
 
 ## Core Tasks
 
@@ -27,10 +47,6 @@ Metrics:
 
 ### Task 2: Time-to-SSE
 
-Input:
-
-* early observations up to time window `w`
-
 Output:
 
 ```text
@@ -42,15 +58,11 @@ Metrics:
 * `MAE`
 * `Concordance index`
 
-v0.1 evaluation note:
+v0.1 note:
 
-* this task is evaluated only on SSE-positive events with observed onset times
+* evaluated only on SSE-positive events with defined onset times
 
 ### Task 3: Final Cascade Size
-
-Input:
-
-* early observations up to time window `w`
 
 Output:
 
@@ -65,10 +77,6 @@ Metrics:
 
 ### Task 4: Historical Analogue Retrieval
 
-Input:
-
-* early observations up to time window `w`
-
 Output:
 
 ```text
@@ -80,12 +88,11 @@ Metrics:
 * `Recall@k`
 * `NDCG`
 
-v0.1 retrieval oracle:
+v0.1 note:
 
-* relevant analogues are defined by full-trajectory nearest neighbours among historical SSE-positive events
-* baselines retrieve using only early-window trajectories and are scored against that full-trajectory oracle
+* retrieval relevance is currently operationalized by full-trajectory similarity, not human-validated analogue labels
 
-## Event Object
+## Event Object Contract
 
 All datasets are normalized into the following object shape.
 
@@ -108,31 +115,21 @@ class Event:
 
 Interpretation:
 
-* `engagement_series` stores cumulative engagement over fixed time slices
-* `sentiment_series` may be dynamic or static depending on the raw dataset
-* `cascade_graph` is optional because many public datasets lack explicit diffusion graphs
-* `metadata` preserves adapter-specific fields without breaking the shared schema
+* `engagement_series` stores cumulative observations over fixed time slices
+* `sentiment_series` may be static or dynamic depending on source data
+* `cascade_graph` is optional in v0.1 but expected to become more important in v0.2
+* `metadata` is the escape hatch for adapter-specific fields and diagnostics
 
-## Chronological Protocol
+## Evaluation Protocol
 
 SSE-Bench uses strict chronological evaluation.
 
 Rules:
 
-1. all training events must occur no later than validation events
-2. all validation events must occur no later than test events
-3. models may only use observations available before the prediction horizon
-4. labels are created from full trajectories, but features must be truncated to the chosen observation window
-
-The default split policy in v0.1 is:
-
-* `train`: first 70% of events by publication time
-* `val`: next 15%
-* `test`: final 15%
-
-## Observation Windows
-
-The benchmark API allows arbitrary windows, but each adapter only exposes windows consistent with its temporal resolution.
+1. train events occur no later than validation events
+2. validation events occur no later than test events
+3. features must be available at prediction time
+4. labels may use full trajectories, but model inputs must be truncated to the chosen observation window
 
 Default windows:
 
@@ -141,33 +138,25 @@ Default windows:
 * `6 hours`
 * `24 hours`
 
-The UCI adapter uses 20-minute slices, so `20m`, `1h`, `6h`, and `24h` map to `1`, `3`, `18`, and `72` bins respectively.
+Each adapter can expose only the windows supported by its temporal resolution.
 
-## SSE Label Generation
+## SSE Labeling Policy
 
 The default v0.1 label is cohort-relative.
-
-For each dataset cohort:
-
-```text
-cohort = dataset + platform + topic
-```
-
-Compute:
 
 ```text
 size_threshold = quantile(final_cascade_size, q)
 growth_threshold = mean(positive_growth) + sigma * std(positive_growth)
 ```
 
-with defaults:
+Defaults:
 
 ```text
 q = 0.99
 sigma = 3.0
 ```
 
-Then define:
+Then:
 
 ```text
 is_sse = (
@@ -183,57 +172,34 @@ For SSE-positive events:
 time_to_sse_minutes = first bin where slice_to_slice_growth >= growth_threshold
 ```
 
-This keeps the onset definition dynamic while preserving the final-scale requirement.
+This should be described as an **operational proxy** unless the adapter also supports stronger structural evidence.
 
-## UCI Adapter Details
+## Adapter Notes
 
-v0.1 includes a concrete adapter for:
+Current adapter paths:
 
-* `News Popularity in Multiple Social Media Platforms`
+* UCI news popularity adapter
+* eventized as platform-specific engagement trajectories
+* suitable for early-warning experiments, but not yet graph-grounded
+* InfoPath keyword-cascade adapter
+* eventized as cascade-level web diffusion trajectories with a proxy `cascade_graph`
+* suitable for graph-aware experimentation, while still requiring careful claim discipline because the graph is proxy-constructed
 
-Official source:
+Graph-aware baselines should consume either `cascade_graph` or graph summary fields in `metadata`.
 
-* [UCI dataset page](https://archive.ics.uci.edu/dataset/432/news+popularity+in+multiple+social+media+platforms)
+## Artifacts
 
-Adapter mapping:
+Current repo artifacts include:
 
-* one event per `(platform, IDLink)` pair
-* `News_Final.csv` provides metadata and final popularity
-* `Facebook_*`, `GooglePlus_*`, and `LinkedIn_*` tables provide 144 cumulative feedback bins
-* negative counts in the raw time series are treated as missing, then prefix-filled with `0` and converted into monotone cumulative trajectories
-* title/headline sentiment is represented as a static one-step sentiment series and also copied into `metadata`
-* the adapter emits data-quality and label-sensitivity artifacts so proxy-label assumptions are auditable
+* processed event objects
+* per-dataset index tables
+* label threshold summaries
+* data-quality diagnostics
+* label-sensitivity diagnostics
+* per-dataset baseline reports
 
-## Processed Artifacts
+If all-dataset wrappers are present, they should orchestrate the same per-dataset entrypoints rather than replace them.
 
-The preparation pipeline emits:
+## Validity Statement
 
-* `data/processed/uci_news_sse/events.jsonl.gz`
-* `data/processed/uci_news_sse/event_index.parquet`
-* `artifacts/uci_news_summary.json`
-* `artifacts/uci_news_cohort_thresholds.csv`
-* `artifacts/uci_news_data_quality.csv`
-* `artifacts/uci_news_label_sensitivity.csv`
-* `artifacts/uci_news_baselines.json`
-
-`events.jsonl.gz` contains the full schema objects. `event_index.parquet` stores scalar metadata and precomputed early-window features for fast experimentation.
-
-## Baselines In This Repo
-
-Implemented:
-
-* early-growth heuristic
-* XGBoost classifier for Task 1
-* XGBoost regressor for Task 2
-* XGBoost regressor for Task 3
-* trajectory-retrieval baseline for Task 4
-
-Planned:
-
-* temporal neural baselines for sequence modeling
-* retrieval baselines with richer distance functions
-* graph-aware baselines once a cascade-graph adapter is added
-
-## Validity Notes
-
-The UCI adapter is intentionally framed as a proxy-SSE benchmark component. It supports early event-level forecasting and reproducible temporal evaluation, but it does not yet provide explicit diffusion graphs or direct cross-community spread labels. Claims about digital super-spreading should therefore be interpreted as operational rather than fully graph-grounded in v0.1.
+SSE-Bench v0.1 is valid as a benchmark for **event-level early diffusion forecasting under an operational SSE proxy**. It is not yet valid to market v0.1 as a definitive graph-grounded benchmark of social super-spreading. That stronger claim requires at least one additional adapter with richer structural diffusion evidence and corresponding graph-aware baselines.
