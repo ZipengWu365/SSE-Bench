@@ -92,6 +92,7 @@ Current repo contents include:
 * a graph-aware Task 1 classifier for datasets that expose cascade structure
 * diagnostics for data quality, label sensitivity, and baseline results
 * all-dataset orchestration entrypoints
+* pytest coverage for schema, graph features, retrieval, and orchestration logic
 * tracked validity notes for publication-safe claim boundaries
 
 Current artifacts are centered on:
@@ -106,6 +107,8 @@ All-dataset wrappers are also available:
 ```bash
 python -m scripts.prepare_all_datasets
 python -m scripts.run_all_benchmark_suites
+python -m scripts.run_window_sweep --datasets infopath uci --windows 20 60 360 1440
+python -m scripts.build_benchmark_overview
 ```
 
 Otherwise, continue using the per-dataset entrypoints above.
@@ -145,6 +148,12 @@ python -m baselines.time_to_sse_regression --window-minutes 360
 python -m baselines.final_size_regression --window-minutes 360
 python -m baselines.trajectory_retrieval --window-minutes 360
 python -m baselines.graph_cascade_classifier --events-path data/processed/infopath_sse/events.jsonl.gz
+```
+
+Run the test suite:
+
+```bash
+python -m pytest
 ```
 
 ## Validity Boundary

@@ -1,0 +1,133 @@
+{
+  "dataset_key": "uci",
+  "artifact_slug": "uci_news",
+  "suite_module": "scripts.run_uci_benchmark_suite",
+  "supported_windows": [
+    20,
+    60,
+    360,
+    1440
+  ],
+  "windows": [
+    {
+      "window_minutes": 20,
+      "task_1_heuristic": {
+        "auprc": 0.14677662479915404,
+        "f1": 0.10911808669656203,
+        "precision": 0.06691109074243813,
+        "recall": 0.29554655870445345,
+        "auroc": 0.6457035297875972
+      },
+      "task_1_xgboost": {
+        "auprc": 0.028567997148597448,
+        "f1": 0.015620306398317813,
+        "precision": 0.00795776264442574,
+        "recall": 0.42105263157894735,
+        "auroc": 0.5572467195905604
+      },
+      "task_1_graph": {},
+      "task_2_time_to_sse": {
+        "mae": 426.083469630253,
+        "concordance_index": 0.6615218827128306
+      },
+      "task_3_final_size": {
+        "rmse": 1.5623004124066118,
+        "spearman": 0.23236238681729873
+      },
+      "task_4_retrieval": {
+        "recall_at_k": 0.023967611336032393,
+        "ndcg_at_k": 0.07464028735047336
+      }
+    },
+    {
+      "window_minutes": 60,
+      "task_1_heuristic": {
+        "auprc": 0.066669653197168,
+        "f1": 0.07885657959586002,
+        "precision": 0.04489337822671156,
+        "recall": 0.32388663967611336,
+        "auroc": 0.6480484779002377
+      },
+      "task_1_xgboost": {
+        "auprc": 0.08404789474494043,
+        "f1": 0.019868791002811623,
+        "precision": 0.01016981675141514,
+        "recall": 0.4291497975708502,
+        "auroc": 0.597389580948566
+      },
+      "task_1_graph": {},
+      "task_2_time_to_sse": {
+        "mae": 422.9815140812986,
+        "concordance_index": 0.6713769249487259
+      },
+      "task_3_final_size": {
+        "rmse": 1.5201765198566362,
+        "spearman": 0.2611442320949117
+      },
+      "task_4_retrieval": {
+        "recall_at_k": 0.04631578947368421,
+        "ndcg_at_k": 0.11158125619493782
+      }
+    },
+    {
+      "window_minutes": 360,
+      "task_1_heuristic": {
+        "auprc": 0.07991792802384773,
+        "f1": 0.19774501300954034,
+        "precision": 0.12582781456953643,
+        "recall": 0.46153846153846156,
+        "auroc": 0.7493746648640527
+      },
+      "task_1_xgboost": {
+        "auprc": 0.19025495737298911,
+        "f1": 0.05226209048361934,
+        "precision": 0.02745339069862733,
+        "recall": 0.5425101214574899,
+        "auroc": 0.7673876322988739
+      },
+      "task_1_graph": {},
+      "task_2_time_to_sse": {
+        "mae": 346.6873245702581,
+        "concordance_index": 0.7780616678833385
+      },
+      "task_3_final_size": {
+        "rmse": 1.2435805870882783,
+        "spearman": 0.5015602041772054
+      },
+      "task_4_retrieval": {
+        "recall_at_k": 0.128582995951417,
+        "ndcg_at_k": 0.3357446258831688
+      }
+    },
+    {
+      "window_minutes": 1440,
+      "task_1_heuristic": {
+        "auprc": 0.11525539730589242,
+        "f1": 0.15959252971137522,
+        "precision": 0.13742690058479531,
+        "recall": 0.1902834008097166,
+        "auroc": 0.9204652737383641
+      },
+      "task_1_xgboost": {
+        "auprc": 0.2995470778165048,
+        "f1": 0.1511042231693142,
+        "precision": 0.08354755784061697,
+        "recall": 0.7894736842105263,
+        "auroc": 0.9371903495026773
+      },
+      "task_1_graph": {},
+      "task_2_time_to_sse": {
+        "mae": 310.5509785717798,
+        "concordance_index": 0.7417874648034206
+      },
+      "task_3_final_size": {
+        "rmse": 0.5483040201338343,
+        "spearman": 0.8619498742040522
+      },
+      "task_4_retrieval": {
+        "recall_at_k": 0.337004048582996,
+        "ndcg_at_k": 0.8564220350274371
+      }
+    }
+  ]
+}

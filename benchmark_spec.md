@@ -197,6 +197,8 @@ Current repo artifacts include:
 * data-quality diagnostics
 * label-sensitivity diagnostics
 * per-dataset baseline reports
+* per-dataset window-sweep reports
+* a cross-dataset benchmark overview
 
 If all-dataset wrappers are present, they should orchestrate the same per-dataset entrypoints rather than replace them.
 
