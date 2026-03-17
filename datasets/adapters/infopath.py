@@ -22,6 +22,8 @@ from schema.event import Event
 DOWNLOAD_URL = "https://snap.stanford.edu/infopath/memes-w5-all-2011-03-2012-02-n5000-call-nc10-cl2-cascades-keywords.tgz"
 DATASET_NAME = "snap_infopath_keywords"
 EPOCH_UTC = datetime(1970, 1, 1, tzinfo=timezone.utc)
+SENSITIVITY_QUANTILES = (0.95, 0.975, 0.99)
+SENSITIVITY_SIGMAS = (2.0, 3.0, 4.0)
 
 
 @dataclass(slots=True)
@@ -180,6 +182,60 @@ def _sse_thresholds(events_frame: pd.DataFrame, quantile: float, sigma: float, m
             }
         )
     return pd.DataFrame(rows)
+
+
+def _label_sensitivity(
+    events_frame: pd.DataFrame,
+    quantiles: tuple[float, ...],
+    sigmas: tuple[float, ...],
+    min_topic_events: int,
+) -> pd.DataFrame:
+    base = events_frame[["topic", "final_cascade_size", "growth_max"]].copy()
+    rows: list[dict[str, object]] = []
+    for quantile in quantiles:
+        for sigma in sigmas:
+            thresholds = _sse_thresholds(base, quantile=quantile, sigma=sigma, min_topic_events=min_topic_events)
+            merged = base.merge(thresholds, on="topic", how="left", validate="many_to_one")
+            merged["is_sse"] = (merged["final_cascade_size"] >= merged["size_threshold"]) & (
+                merged["growth_max"] >= merged["growth_threshold"]
+            )
+            per_topic = (
+                merged.groupby(["topic", "size_threshold", "growth_threshold", "use_global_thresholds"], sort=True)[
+                    "is_sse"
+                ]
+                .agg(["size", "sum"])
+                .reset_index()
+                .rename(columns={"size": "events", "sum": "sse_events"})
+            )
+            for record in per_topic.itertuples(index=False):
+                rows.append(
+                    {
+                        "quantile": float(quantile),
+                        "sigma": float(sigma),
+                        "topic": str(record.topic),
+                        "events": int(record.events),
+                        "sse_events": int(record.sse_events),
+                        "sse_rate": float(record.sse_events / record.events) if record.events else 0.0,
+                        "size_threshold": float(record.size_threshold),
+                        "growth_threshold": float(record.growth_threshold),
+                        "use_global_thresholds": bool(record.use_global_thresholds),
+                    }
+                )
+            rows.append(
+                {
+                    "quantile": float(quantile),
+                    "sigma": float(sigma),
+                    "topic": "__ALL__",
+                    "events": int(len(merged)),
+                    "sse_events": int(merged["is_sse"].sum()),
+                    "sse_rate": float(merged["is_sse"].mean()) if len(merged) else 0.0,
+                    "size_threshold": float("nan"),
+                    "growth_threshold": float("nan"),
+                    "use_global_thresholds": False,
+                }
+            )
+    frame = pd.DataFrame(rows)
+    return frame.sort_values(["quantile", "sigma", "topic"], kind="mergesort").reset_index(drop=True)
 
 
 def _split_by_time(events_frame: pd.DataFrame, train_fraction: float, val_fraction: float) -> tuple[dict[str, str], dict[str, str]]:
@@ -366,6 +422,7 @@ def prepare_dataset(config: InfoPathConfig | None = None) -> dict[str, object]:
     index_path = config.processed_dir / "event_index.parquet"
     thresholds_path = config.artifacts_dir / "infopath_topic_thresholds.csv"
     quality_path = config.artifacts_dir / "infopath_data_quality.csv"
+    sensitivity_path = config.artifacts_dir / "infopath_label_sensitivity.csv"
     summary_path = config.artifacts_dir / "infopath_summary.json"
     if events_path.exists():
         events_path.unlink()
@@ -436,9 +493,24 @@ def prepare_dataset(config: InfoPathConfig | None = None) -> dict[str, object]:
     index_frame.to_parquet(index_path, index=False)
     thresholds.to_csv(thresholds_path, index=False, quoting=csv.QUOTE_MINIMAL)
     pd.DataFrame(quality_rows).to_csv(quality_path, index=False, quoting=csv.QUOTE_MINIMAL)
+    sensitivity_frame = _label_sensitivity(
+        events_frame,
+        quantiles=SENSITIVITY_QUANTILES,
+        sigmas=SENSITIVITY_SIGMAS,
+        min_topic_events=config.min_topic_events,
+    )
+    sensitivity_frame.to_csv(sensitivity_path, index=False, quoting=csv.QUOTE_MINIMAL)
 
     split_counts = {split: int(count) for split, count in index_frame["split"].value_counts().sort_index().items()}
     topic_counts = {topic: int(count) for topic, count in index_frame["topic"].value_counts().sort_index().items()}
+    sse_by_split = {
+        split: int(count)
+        for split, count in index_frame.loc[index_frame["is_sse"] > 0, "split"].value_counts().sort_index().items()
+    }
+    sse_by_topic = {
+        topic: int(count)
+        for topic, count in index_frame.loc[index_frame["is_sse"] > 0, "topic"].value_counts().sort_index().items()
+    }
     summary = {
         "dataset": DATASET_NAME,
         "download_url": config.download_url,
@@ -458,12 +530,19 @@ def prepare_dataset(config: InfoPathConfig | None = None) -> dict[str, object]:
         "positive_time_to_sse_labels": int(len(positive_onsets)),
         "split_counts": split_counts,
         "topic_counts": topic_counts,
+        "sse_by_split": sse_by_split,
+        "sse_by_topic": sse_by_topic,
         "malformed_lines_total": int(sum(row["skipped_lines"] for row in quality_rows)),
         "timeseries_overflow_total": int(sum(row["overflow_infections_total"] for row in quality_rows)),
         "median_time_to_sse_minutes": float(np.median(positive_onsets)) if positive_onsets else None,
         "artifacts": {
             "topic_thresholds": str(thresholds_path),
             "data_quality": str(quality_path),
+            "label_sensitivity": str(sensitivity_path),
+        },
+        "label_sensitivity_grid": {
+            "quantiles": list(SENSITIVITY_QUANTILES),
+            "sigmas": list(SENSITIVITY_SIGMAS),
         },
     }
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")

@@ -28,11 +28,34 @@
     "airstrikes": 20000,
     "alcohol": 20000
   },
+  "sse_by_split": {
+    "test": 121,
+    "train": 190,
+    "val": 60
+  },
+  "sse_by_topic": {
+    "abroad": 81,
+    "airstrikes": 186,
+    "alcohol": 104
+  },
   "malformed_lines_total": 0,
   "timeseries_overflow_total": 30322,
   "median_time_to_sse_minutes": 480.0,
   "artifacts": {
     "topic_thresholds": "artifacts\\infopath_topic_thresholds.csv",
-    "data_quality": "artifacts\\infopath_data_quality.csv"
+    "data_quality": "artifacts\\infopath_data_quality.csv",
+    "label_sensitivity": "artifacts\\infopath_label_sensitivity.csv"
+  },
+  "label_sensitivity_grid": {
+    "quantiles": [
+      0.95,
+      0.975,
+      0.99
+    ],
+    "sigmas": [
+      2.0,
+      3.0,
+      4.0
+    ]
   }
 }
