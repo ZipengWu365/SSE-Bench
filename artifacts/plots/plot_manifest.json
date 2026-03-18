@@ -1,0 +1,16 @@
+{
+  "artifacts_dir": "C:\\Users\\wzp07\\OneDrive\\\u6587\u6863\\ZipengLibrary\\SSEBench\\artifacts",
+  "output_dir": "C:\\Users\\wzp07\\OneDrive\\\u6587\u6863\\ZipengLibrary\\SSEBench\\artifacts\\plots",
+  "outputs": {
+    "task1_xgb_auroc_vs_window": "C:\\Users\\wzp07\\OneDrive\\\u6587\u6863\\ZipengLibrary\\SSEBench\\artifacts\\plots\\task1_xgb_auroc_vs_window.png",
+    "task1_xgb_auprc_vs_window": "C:\\Users\\wzp07\\OneDrive\\\u6587\u6863\\ZipengLibrary\\SSEBench\\artifacts\\plots\\task1_xgb_auprc_vs_window.png",
+    "task3_final_size_rmse_vs_window": "C:\\Users\\wzp07\\OneDrive\\\u6587\u6863\\ZipengLibrary\\SSEBench\\artifacts\\plots\\task3_final_size_rmse_vs_window.png",
+    "task4_retrieval_recall_vs_window": "C:\\Users\\wzp07\\OneDrive\\\u6587\u6863\\ZipengLibrary\\SSEBench\\artifacts\\plots\\task4_retrieval_recall_vs_window.png",
+    "headline_task1_xgb_bar": "C:\\Users\\wzp07\\OneDrive\\\u6587\u6863\\ZipengLibrary\\SSEBench\\artifacts\\plots\\headline_task1_xgb_bar.png",
+    "report_markdown": "C:\\Users\\wzp07\\OneDrive\\\u6587\u6863\\ZipengLibrary\\SSEBench\\artifacts\\plots\\benchmark_plots.md"
+  },
+  "datasets": [
+    "infopath",
+    "uci_news"
+  ]
+}
