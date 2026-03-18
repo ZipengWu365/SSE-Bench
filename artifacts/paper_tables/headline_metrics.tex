@@ -1,0 +1,15 @@
+% Requires: \usepackage{booktabs}
+\begin{table}[t]
+\centering
+\caption{Headline metrics (selected window) for SSE-Bench baselines.}
+\label{tab:ssebench\_headline\_metrics}
+\begin{tabular}{llrrrrrrrr}
+\toprule
+Dataset & Slug & Window & T1 XGB AUROC & T1 XGB AUPRC & T1 Graph AUROC & T1 Graph AUPRC & T2 MAE & T3 RMSE & T4 Recall@k \\
+\midrule
+snap\_infopath\_keywords & infopath & 360 & 0.903 & 0.157 & 0.979 & 0.356 & 481.6 & 0.418 & 0.168 \\
+synthetic\_sse\_graph & synthetic\_sse & 360 & 0.793 & 0.251 & 0.831 & 0.331 & 80.2 & 0.134 & 0.314 \\
+uci\_news\_social\_feedback & uci\_news & 360 & 0.767 & 0.190 & - & - & 346.7 & 1.244 & 0.129 \\
+\bottomrule
+\end{tabular}
+\end{table}

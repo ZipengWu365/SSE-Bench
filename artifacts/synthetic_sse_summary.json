@@ -1,0 +1,42 @@
+{
+  "dataset": "synthetic_sse_graph",
+  "processed_events_path": "data\\processed\\synthetic_sse\\events.jsonl.gz",
+  "processed_index_path": "data\\processed\\synthetic_sse\\event_index.parquet",
+  "split_boundaries": {
+    "train_cutoff": "2020-02-18T14:35:00+00:00",
+    "val_cutoff": "2020-02-29T00:35:00+00:00"
+  },
+  "total_events": 20000,
+  "sse_events": 565,
+  "sse_rate": 0.02825,
+  "slice_minutes": 20,
+  "max_observation_bins": 72,
+  "split_counts": {
+    "test": 3000,
+    "train": 14000,
+    "val": 3000
+  },
+  "sse_by_split": {
+    "test": 94,
+    "train": 378,
+    "val": 93
+  },
+  "artifacts": {
+    "data_quality": "artifacts\\synthetic_sse_data_quality.csv"
+  },
+  "generator_config": {
+    "seed": 42,
+    "events": 20000,
+    "sse_probability": 0.05,
+    "communities": 4,
+    "nodes_per_community": 250,
+    "base_reproduction": 0.8,
+    "sse_reproduction": 1.6,
+    "base_cross_community_prob": 0.02,
+    "sse_cross_community_prob": 0.15,
+    "onset_min_minutes": 40,
+    "onset_max_minutes": 360,
+    "max_graph_nodes": 64,
+    "max_graph_edges": 256
+  }
+}

@@ -1,0 +1,813 @@
+{
+  "windows": [
+    60,
+    360,
+    1440
+  ],
+  "include_self": false,
+  "datasets": {
+    "snap_infopath_keywords": {
+      "index_path": "data\\processed\\infopath_sse\\event_index.parquet",
+      "supported_windows": [
+        20,
+        60,
+        360,
+        1440
+      ],
+      "split_counts": {
+        "test": 8995,
+        "train": 42408,
+        "val": 8597
+      },
+      "sse_rate": 0.006183333333333333
+    },
+    "synthetic_sse_graph": {
+      "index_path": "data\\processed\\synthetic_sse\\event_index.parquet",
+      "supported_windows": [
+        20,
+        60,
+        360,
+        1440
+      ],
+      "split_counts": {
+        "test": 3000,
+        "train": 14000,
+        "val": 3000
+      },
+      "sse_rate": 0.02825
+    },
+    "uci_news_social_feedback": {
+      "index_path": "data\\processed\\uci_news_sse\\event_index.parquet",
+      "supported_windows": [
+        20,
+        60,
+        360,
+        1440
+      ],
+      "split_counts": {
+        "test": 39078,
+        "train": 182362,
+        "val": 39075
+      },
+      "sse_rate": 0.005784695698904094
+    }
+  },
+  "pairs": [
+    {
+      "window_minutes": 60,
+      "features": [
+        "w60_observed_size",
+        "w60_growth_rate",
+        "w60_max_increment",
+        "w60_mean_increment",
+        "w60_burstiness",
+        "w60_acceleration",
+        "w60_sentiment_mean",
+        "w60_sentiment_abs"
+      ],
+      "source": "snap_infopath_keywords",
+      "target": "synthetic_sse_graph",
+      "threshold": 0.85,
+      "source_val": {
+        "classification": {
+          "auprc": 0.025546098950026616,
+          "f1": 0.07874015748031496,
+          "precision": 0.07462686567164178,
+          "recall": 0.08333333333333333,
+          "auroc": 0.5502030377572137
+        },
+        "calibration": {
+          "brier_score": 0.1804763127529744,
+          "ece": 0.398246820230456
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.03905394903570572,
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "auroc": 0.5451798187169613
+        },
+        "calibration": {
+          "brier_score": 0.17551883543428803,
+          "ece": 0.3573886830980579
+        }
+      }
+    },
+    {
+      "window_minutes": 60,
+      "features": [
+        "w60_observed_size",
+        "w60_growth_rate",
+        "w60_max_increment",
+        "w60_mean_increment",
+        "w60_burstiness",
+        "w60_acceleration",
+        "w60_sentiment_mean",
+        "w60_sentiment_abs"
+      ],
+      "source": "snap_infopath_keywords",
+      "target": "uci_news_social_feedback",
+      "threshold": 0.85,
+      "source_val": {
+        "classification": {
+          "auprc": 0.025546098950026616,
+          "f1": 0.07874015748031496,
+          "precision": 0.07462686567164178,
+          "recall": 0.08333333333333333,
+          "auroc": 0.5502030377572137
+        },
+        "calibration": {
+          "brier_score": 0.1804763127529744,
+          "ece": 0.398246820230456
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.03273120133208428,
+          "f1": 0.10344827586206896,
+          "precision": 0.061855670103092786,
+          "recall": 0.3157894736842105,
+          "auroc": 0.6440261167019088
+        },
+        "calibration": {
+          "brier_score": 0.18426185896508954,
+          "ece": 0.40583843038917355
+        }
+      }
+    },
+    {
+      "window_minutes": 60,
+      "features": [
+        "w60_observed_size",
+        "w60_growth_rate",
+        "w60_max_increment",
+        "w60_mean_increment",
+        "w60_burstiness",
+        "w60_acceleration",
+        "w60_sentiment_mean",
+        "w60_sentiment_abs"
+      ],
+      "source": "synthetic_sse_graph",
+      "target": "snap_infopath_keywords",
+      "threshold": 0.6,
+      "source_val": {
+        "classification": {
+          "auprc": 0.05036395678127374,
+          "f1": 0.10823170731707317,
+          "precision": 0.05824446267432322,
+          "recall": 0.7634408602150538,
+          "auroc": 0.6809148107460302
+        },
+        "calibration": {
+          "brier_score": 0.22517663304440258,
+          "ece": 0.41864858390701315
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.013450974463747246,
+          "f1": 0.042131350681536554,
+          "precision": 0.02478134110787172,
+          "recall": 0.14049586776859505,
+          "auroc": 0.44809239360225894
+        },
+        "calibration": {
+          "brier_score": 0.30445983481314154,
+          "ece": 0.5347573932376237
+        }
+      }
+    },
+    {
+      "window_minutes": 60,
+      "features": [
+        "w60_observed_size",
+        "w60_growth_rate",
+        "w60_max_increment",
+        "w60_mean_increment",
+        "w60_burstiness",
+        "w60_acceleration",
+        "w60_sentiment_mean",
+        "w60_sentiment_abs"
+      ],
+      "source": "synthetic_sse_graph",
+      "target": "uci_news_social_feedback",
+      "threshold": 0.6,
+      "source_val": {
+        "classification": {
+          "auprc": 0.05036395678127374,
+          "f1": 0.10823170731707317,
+          "precision": 0.05824446267432322,
+          "recall": 0.7634408602150538,
+          "auroc": 0.6809148107460302
+        },
+        "calibration": {
+          "brier_score": 0.22517663304440258,
+          "ece": 0.41864858390701315
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.0053321479736143824,
+          "f1": 0.01358695652173913,
+          "precision": 0.010224948875255624,
+          "recall": 0.020242914979757085,
+          "auroc": 0.3666539224212217
+        },
+        "calibration": {
+          "brier_score": 0.27984276954312826,
+          "ece": 0.5095491478828021
+        }
+      }
+    },
+    {
+      "window_minutes": 60,
+      "features": [
+        "w60_observed_size",
+        "w60_growth_rate",
+        "w60_max_increment",
+        "w60_mean_increment",
+        "w60_burstiness",
+        "w60_acceleration",
+        "w60_sentiment_mean",
+        "w60_sentiment_abs"
+      ],
+      "source": "uci_news_social_feedback",
+      "target": "snap_infopath_keywords",
+      "threshold": 0.7999999999999999,
+      "source_val": {
+        "classification": {
+          "auprc": 0.01949987054591834,
+          "f1": 0.0802675585284281,
+          "precision": 0.08108108108108109,
+          "recall": 0.07947019867549669,
+          "auroc": 0.5494630902400399
+        },
+        "calibration": {
+          "brier_score": 0.17392423861397768,
+          "ece": 0.3738743585617888
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.027526505275638165,
+          "f1": 0.014184397163120567,
+          "precision": 0.05,
+          "recall": 0.008264462809917356,
+          "auroc": 0.4883669816363897
+        },
+        "calibration": {
+          "brier_score": 0.023397781591973112,
+          "ece": 0.09455047498864555
+        }
+      }
+    },
+    {
+      "window_minutes": 60,
+      "features": [
+        "w60_observed_size",
+        "w60_growth_rate",
+        "w60_max_increment",
+        "w60_mean_increment",
+        "w60_burstiness",
+        "w60_acceleration",
+        "w60_sentiment_mean",
+        "w60_sentiment_abs"
+      ],
+      "source": "uci_news_social_feedback",
+      "target": "synthetic_sse_graph",
+      "threshold": 0.7999999999999999,
+      "source_val": {
+        "classification": {
+          "auprc": 0.01949987054591834,
+          "f1": 0.0802675585284281,
+          "precision": 0.08108108108108109,
+          "recall": 0.07947019867549669,
+          "auroc": 0.5494630902400399
+        },
+        "calibration": {
+          "brier_score": 0.17392423861397768,
+          "ece": 0.3738743585617888
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.04414045033286989,
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "auroc": 0.6375437466137559
+        },
+        "calibration": {
+          "brier_score": 0.030689031493360715,
+          "ece": 0.01222624180590113
+        }
+      }
+    },
+    {
+      "window_minutes": 360,
+      "features": [
+        "w360_observed_size",
+        "w360_growth_rate",
+        "w360_max_increment",
+        "w360_mean_increment",
+        "w360_burstiness",
+        "w360_acceleration",
+        "w360_sentiment_mean",
+        "w360_sentiment_abs"
+      ],
+      "source": "snap_infopath_keywords",
+      "target": "synthetic_sse_graph",
+      "threshold": 0.95,
+      "source_val": {
+        "classification": {
+          "auprc": 0.09115894028592487,
+          "f1": 0.1437125748502994,
+          "precision": 0.11214953271028037,
+          "recall": 0.2,
+          "auroc": 0.9231189723165828
+        },
+        "calibration": {
+          "brier_score": 0.08680114258628069,
+          "ece": 0.1009307962763324
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.17093092513644997,
+          "f1": 0.26666666666666666,
+          "precision": 0.6153846153846154,
+          "recall": 0.1702127659574468,
+          "auroc": 0.40126993308049375
+        },
+        "calibration": {
+          "brier_score": 0.3565341851965761,
+          "ece": 0.4199664087679666
+        }
+      }
+    },
+    {
+      "window_minutes": 360,
+      "features": [
+        "w360_observed_size",
+        "w360_growth_rate",
+        "w360_max_increment",
+        "w360_mean_increment",
+        "w360_burstiness",
+        "w360_acceleration",
+        "w360_sentiment_mean",
+        "w360_sentiment_abs"
+      ],
+      "source": "snap_infopath_keywords",
+      "target": "uci_news_social_feedback",
+      "threshold": 0.95,
+      "source_val": {
+        "classification": {
+          "auprc": 0.09115894028592487,
+          "f1": 0.1437125748502994,
+          "precision": 0.11214953271028037,
+          "recall": 0.2,
+          "auroc": 0.9231189723165828
+        },
+        "calibration": {
+          "brier_score": 0.08680114258628069,
+          "ece": 0.1009307962763324
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.04747655749700256,
+          "f1": 0.12181616832779624,
+          "precision": 0.07055805003207184,
+          "recall": 0.44534412955465585,
+          "auroc": 0.7355549434239954
+        },
+        "calibration": {
+          "brier_score": 0.09960999132039182,
+          "ece": 0.11418380012911453
+        }
+      }
+    },
+    {
+      "window_minutes": 360,
+      "features": [
+        "w360_observed_size",
+        "w360_growth_rate",
+        "w360_max_increment",
+        "w360_mean_increment",
+        "w360_burstiness",
+        "w360_acceleration",
+        "w360_sentiment_mean",
+        "w360_sentiment_abs"
+      ],
+      "source": "synthetic_sse_graph",
+      "target": "snap_infopath_keywords",
+      "threshold": 0.95,
+      "source_val": {
+        "classification": {
+          "auprc": 0.2475397885275327,
+          "f1": 0.32142857142857145,
+          "precision": 0.9473684210526315,
+          "recall": 0.1935483870967742,
+          "auroc": 0.7793904960588273
+        },
+        "calibration": {
+          "brier_score": 0.1868724114192418,
+          "ece": 0.28337098202365446
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.18601095303587128,
+          "f1": 0.2346368715083799,
+          "precision": 0.3620689655172414,
+          "recall": 0.17355371900826447,
+          "auroc": 0.8861824961769642
+        },
+        "calibration": {
+          "brier_score": 0.038046483490032625,
+          "ece": 0.06764597303154835
+        }
+      }
+    },
+    {
+      "window_minutes": 360,
+      "features": [
+        "w360_observed_size",
+        "w360_growth_rate",
+        "w360_max_increment",
+        "w360_mean_increment",
+        "w360_burstiness",
+        "w360_acceleration",
+        "w360_sentiment_mean",
+        "w360_sentiment_abs"
+      ],
+      "source": "synthetic_sse_graph",
+      "target": "uci_news_social_feedback",
+      "threshold": 0.95,
+      "source_val": {
+        "classification": {
+          "auprc": 0.2475397885275327,
+          "f1": 0.32142857142857145,
+          "precision": 0.9473684210526315,
+          "recall": 0.1935483870967742,
+          "auroc": 0.7793904960588273
+        },
+        "calibration": {
+          "brier_score": 0.1868724114192418,
+          "ece": 0.28337098202365446
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.03830046876979541,
+          "f1": 0.09603340292275574,
+          "precision": 0.06469760900140648,
+          "recall": 0.1862348178137652,
+          "auroc": 0.747958375007572
+        },
+        "calibration": {
+          "brier_score": 0.07101051699515684,
+          "ece": 0.10073078011124392
+        }
+      }
+    },
+    {
+      "window_minutes": 360,
+      "features": [
+        "w360_observed_size",
+        "w360_growth_rate",
+        "w360_max_increment",
+        "w360_mean_increment",
+        "w360_burstiness",
+        "w360_acceleration",
+        "w360_sentiment_mean",
+        "w360_sentiment_abs"
+      ],
+      "source": "uci_news_social_feedback",
+      "target": "snap_infopath_keywords",
+      "threshold": 0.85,
+      "source_val": {
+        "classification": {
+          "auprc": 0.042736979739077655,
+          "f1": 0.13539651837524178,
+          "precision": 0.09562841530054644,
+          "recall": 0.23178807947019867,
+          "auroc": 0.6872396437683623
+        },
+        "calibration": {
+          "brier_score": 0.11732579713790635,
+          "ece": 0.2817680555605076
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.14706631284180505,
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "auroc": 0.3740898753345739
+        },
+        "calibration": {
+          "brier_score": 0.02990429813395563,
+          "ece": 0.1219931400753247
+        }
+      }
+    },
+    {
+      "window_minutes": 360,
+      "features": [
+        "w360_observed_size",
+        "w360_growth_rate",
+        "w360_max_increment",
+        "w360_mean_increment",
+        "w360_burstiness",
+        "w360_acceleration",
+        "w360_sentiment_mean",
+        "w360_sentiment_abs"
+      ],
+      "source": "uci_news_social_feedback",
+      "target": "synthetic_sse_graph",
+      "threshold": 0.85,
+      "source_val": {
+        "classification": {
+          "auprc": 0.042736979739077655,
+          "f1": 0.13539651837524178,
+          "precision": 0.09562841530054644,
+          "recall": 0.23178807947019867,
+          "auroc": 0.6872396437683623
+        },
+        "calibration": {
+          "brier_score": 0.11732579713790635,
+          "ece": 0.2817680555605076
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.24552562254264537,
+          "f1": 0.041666666666666664,
+          "precision": 1.0,
+          "recall": 0.02127659574468085,
+          "auroc": 0.7729276185734577
+        },
+        "calibration": {
+          "brier_score": 0.02655076486660928,
+          "ece": 0.00437325383691738
+        }
+      }
+    },
+    {
+      "window_minutes": 1440,
+      "features": [
+        "w1440_observed_size",
+        "w1440_growth_rate",
+        "w1440_max_increment",
+        "w1440_mean_increment",
+        "w1440_burstiness",
+        "w1440_acceleration",
+        "w1440_sentiment_mean",
+        "w1440_sentiment_abs"
+      ],
+      "source": "snap_infopath_keywords",
+      "target": "synthetic_sse_graph",
+      "threshold": 0.95,
+      "source_val": {
+        "classification": {
+          "auprc": 0.4499073059818553,
+          "f1": 0.5743589743589743,
+          "precision": 0.4148148148148148,
+          "recall": 0.9333333333333333,
+          "auroc": 0.9955722150638396
+        },
+        "calibration": {
+          "brier_score": 0.012899169820533803,
+          "ece": 0.019167995027542635
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.2714968954921621,
+          "f1": 0.39316239316239315,
+          "precision": 1.0,
+          "recall": 0.24468085106382978,
+          "auroc": 0.4465705583459021
+        },
+        "calibration": {
+          "brier_score": 0.04980816560108088,
+          "ece": 0.1266042053657778
+        }
+      }
+    },
+    {
+      "window_minutes": 1440,
+      "features": [
+        "w1440_observed_size",
+        "w1440_growth_rate",
+        "w1440_max_increment",
+        "w1440_mean_increment",
+        "w1440_burstiness",
+        "w1440_acceleration",
+        "w1440_sentiment_mean",
+        "w1440_sentiment_abs"
+      ],
+      "source": "snap_infopath_keywords",
+      "target": "uci_news_social_feedback",
+      "threshold": 0.95,
+      "source_val": {
+        "classification": {
+          "auprc": 0.4499073059818553,
+          "f1": 0.5743589743589743,
+          "precision": 0.4148148148148148,
+          "recall": 0.9333333333333333,
+          "auroc": 0.9955722150638396
+        },
+        "calibration": {
+          "brier_score": 0.012899169820533803,
+          "ece": 0.019167995027542635
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.10091897548865214,
+          "f1": 0.1416803953871499,
+          "precision": 0.07711621233859398,
+          "recall": 0.8704453441295547,
+          "auroc": 0.9208382175558427
+        },
+        "calibration": {
+          "brier_score": 0.08033435478041047,
+          "ece": 0.09254309605023
+        }
+      }
+    },
+    {
+      "window_minutes": 1440,
+      "features": [
+        "w1440_observed_size",
+        "w1440_growth_rate",
+        "w1440_max_increment",
+        "w1440_mean_increment",
+        "w1440_burstiness",
+        "w1440_acceleration",
+        "w1440_sentiment_mean",
+        "w1440_sentiment_abs"
+      ],
+      "source": "synthetic_sse_graph",
+      "target": "snap_infopath_keywords",
+      "threshold": 0.95,
+      "source_val": {
+        "classification": {
+          "auprc": 0.29251901725105917,
+          "f1": 0.3793103448275862,
+          "precision": 0.9565217391304348,
+          "recall": 0.23655913978494625,
+          "auroc": 0.8009772480959937
+        },
+        "calibration": {
+          "brier_score": 0.18050836667945244,
+          "ece": 0.27281658895562094
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.026502152762931722,
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "auroc": 0.7430272669531383
+        },
+        "calibration": {
+          "brier_score": 0.02137805593714555,
+          "ece": 0.021052665671288637
+        }
+      }
+    },
+    {
+      "window_minutes": 1440,
+      "features": [
+        "w1440_observed_size",
+        "w1440_growth_rate",
+        "w1440_max_increment",
+        "w1440_mean_increment",
+        "w1440_burstiness",
+        "w1440_acceleration",
+        "w1440_sentiment_mean",
+        "w1440_sentiment_abs"
+      ],
+      "source": "synthetic_sse_graph",
+      "target": "uci_news_social_feedback",
+      "threshold": 0.95,
+      "source_val": {
+        "classification": {
+          "auprc": 0.29251901725105917,
+          "f1": 0.3793103448275862,
+          "precision": 0.9565217391304348,
+          "recall": 0.23655913978494625,
+          "auroc": 0.8009772480959937
+        },
+        "calibration": {
+          "brier_score": 0.18050836667945244,
+          "ece": 0.27281658895562094
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.15635909531580197,
+          "f1": 0.31609756097560976,
+          "precision": 0.20822622107969152,
+          "recall": 0.6558704453441295,
+          "auroc": 0.8830861272928043
+        },
+        "calibration": {
+          "brier_score": 0.08205591695587747,
+          "ece": 0.13103818590540373
+        }
+      }
+    },
+    {
+      "window_minutes": 1440,
+      "features": [
+        "w1440_observed_size",
+        "w1440_growth_rate",
+        "w1440_max_increment",
+        "w1440_mean_increment",
+        "w1440_burstiness",
+        "w1440_acceleration",
+        "w1440_sentiment_mean",
+        "w1440_sentiment_abs"
+      ],
+      "source": "uci_news_social_feedback",
+      "target": "snap_infopath_keywords",
+      "threshold": 0.95,
+      "source_val": {
+        "classification": {
+          "auprc": 0.2102352502507746,
+          "f1": 0.2996742671009772,
+          "precision": 0.2948717948717949,
+          "recall": 0.304635761589404,
+          "auroc": 0.9156016206824505
+        },
+        "calibration": {
+          "brier_score": 0.0439802918128559,
+          "ece": 0.10757032408000353
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.24456606502548633,
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "auroc": 0.8345351914870632
+        },
+        "calibration": {
+          "brier_score": 0.011958315402976255,
+          "ece": 0.01765169567791429
+        }
+      }
+    },
+    {
+      "window_minutes": 1440,
+      "features": [
+        "w1440_observed_size",
+        "w1440_growth_rate",
+        "w1440_max_increment",
+        "w1440_mean_increment",
+        "w1440_burstiness",
+        "w1440_acceleration",
+        "w1440_sentiment_mean",
+        "w1440_sentiment_abs"
+      ],
+      "source": "uci_news_social_feedback",
+      "target": "synthetic_sse_graph",
+      "threshold": 0.95,
+      "source_val": {
+        "classification": {
+          "auprc": 0.2102352502507746,
+          "f1": 0.2996742671009772,
+          "precision": 0.2948717948717949,
+          "recall": 0.304635761589404,
+          "auroc": 0.9156016206824505
+        },
+        "calibration": {
+          "brier_score": 0.0439802918128559,
+          "ece": 0.10757032408000353
+        }
+      },
+      "target_test": {
+        "classification": {
+          "auprc": 0.30689991440130876,
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "auroc": 0.7375953639571832
+        },
+        "calibration": {
+          "brier_score": 0.026758082218434974,
+          "ece": 0.02235853170324117
+        }
+      }
+    }
+  ]
+}

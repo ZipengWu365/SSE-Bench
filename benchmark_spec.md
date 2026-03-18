@@ -10,19 +10,22 @@ SSE-Bench evaluates whether a model can identify, from only early observations, 
 
 Stable and runnable:
 
-* two dataset paths (`uci_news_sse`, `infopath_sse`)
+* three dataset paths (`uci_news_sse`, `infopath_sse`, `synthetic_sse`)
 * strict chronological evaluation
 * Tasks 1-4 defined and runnable on the current adapter
 * diagnostics for label sensitivity and data quality
 * a graph-aware Task 1 baseline for adapters with cascade structure
+* optional cross-dataset transfer evaluation over shared feature intersections
+* reproducible paper-table and plotting exports from tracked artifacts
 
 ### v0.2
 
 Target direction:
 
-* second dataset with cascade-oriented structure
-* graph-aware baselines and graph-derived event signals
+* one more real dataset with stronger structural diffusion evidence
+* richer graph-aware baselines and graph-derived event signals
 * stronger construct validity for the term "super-spreading"
+* stronger external-validity evidence beyond synthetic and current proxy datasets
 
 ## Core Tasks
 
@@ -140,6 +143,22 @@ Default windows:
 
 Each adapter can expose only the windows supported by its temporal resolution.
 
+## Cross-Dataset Transfer (Optional Experimental Track)
+
+Cross-dataset transfer evaluation is implemented as an optional analysis for assessing whether early-warning signals learned from one domain generalize to another.
+
+Current protocol:
+
+* train on dataset A (chronological split within A)
+* select hyperparameters using validation within A
+* test on dataset B using only features available within the chosen observation window `w`
+
+Current constraints:
+
+* transfer should be reported only when adapters expose compatible feature sets, or when a documented feature intersection is used
+* synthetic control tracks can be used to validate mechanics, but do not count as real-domain transfer evidence
+* transfer results should be interpreted as stress tests for portability, not as standalone proof of generalization
+
 ## SSE Labeling Policy
 
 The default v0.1 label is cohort-relative.
@@ -174,6 +193,21 @@ time_to_sse_minutes = first bin where slice_to_slice_growth >= growth_threshold
 
 This should be described as an **operational proxy** unless the adapter also supports stronger structural evidence.
 
+### Synthetic Control Track Labeling
+
+For the synthetic control track, labels come from the generator and are therefore *ground-truth with respect to the synthetic mechanism*:
+
+* `is_sse` reflects the simulated regime switch into a super-spreading process (as defined by the generator)
+* `time_to_sse_minutes` reflects the simulated onset time when the regime switch occurs
+* `final_cascade_size` is the realized cascade size from the simulated diffusion process
+
+This track is intended for:
+
+* sanity checking that baselines and evaluation code behave as expected when diffusion structure is known
+* controlled comparisons of graph-aware vs non-graph models
+
+This track is not intended as evidence of real-world generalization.
+
 ## Adapter Notes
 
 Current adapter paths:
@@ -184,6 +218,10 @@ Current adapter paths:
 * InfoPath keyword-cascade adapter
 * eventized as cascade-level web diffusion trajectories with a proxy `cascade_graph`
 * suitable for graph-aware experimentation, while still requiring careful claim discipline because the graph is proxy-constructed
+
+* Synthetic graph-grounded control track
+* eventized as simulated cascades with explicit `cascade_graph` including community assignments
+* useful for internal validity and debugging, but not a replacement for real diffusion datasets
 
 Graph-aware baselines should consume either `cascade_graph` or graph summary fields in `metadata`.
 
@@ -199,6 +237,9 @@ Current repo artifacts include:
 * per-dataset baseline reports
 * per-dataset window-sweep reports
 * a cross-dataset benchmark overview
+* optional cross-dataset transfer reports
+* paper-ready tables exported from the above JSON/Markdown artifacts
+* static plot bundles for cross-window comparisons
 
 If all-dataset wrappers are present, they should orchestrate the same per-dataset entrypoints rather than replace them.
 
